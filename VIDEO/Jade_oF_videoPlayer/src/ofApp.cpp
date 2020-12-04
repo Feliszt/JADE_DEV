@@ -2,7 +2,28 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+	// setup window size
+	ofSetWindowShape(1920, 1080);
+	ofSetWindowPosition(0, 0);
 
+	// transform relative path to absolute
+	ofFilePath path_temp;
+	dataFolderRelative = "../../../DATA/videos/placeholders/";
+	string dataFolderAbsolute = path_temp.getAbsolutePath(dataFolderRelative, false);
+
+	// load videos
+	ofDirectory dataFolder(dataFolderAbsolute);
+	dataFolder.listDir();
+	// loop through all files
+	for (int i = 0; i < dataFolder.size(); i++) {
+		// append to vector of video players
+		ofVideoPlayer * vPlayer_temp = new ofVideoPlayer();
+		vPlayer_temp->load(dataFolder.getPath(i));
+		videos.push_back(vPlayer_temp);
+
+		// debug
+		ofLog() << "Loading video [" << dataFolder.getPath(i) << "]";
+	}
 }
 
 //--------------------------------------------------------------
@@ -17,55 +38,5 @@ void ofApp::draw(){
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::keyReleased(int key){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y ){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseEntered(int x, int y){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseExited(int x, int y){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::windowResized(int w, int h){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::gotMessage(ofMessage msg){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo){ 
 
 }
