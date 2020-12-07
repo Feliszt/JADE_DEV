@@ -1,9 +1,10 @@
 import serial
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 # configure serial port
-ser = serial.Serial('COM7', 57600, timeout=1)
+ser = serial.Serial('/dev/ttyACM0', 57600, timeout=1)
 
 #
 array_size = 1
@@ -34,13 +35,17 @@ while True:
     weight_mean = np.mean(weight_array)
     weight_dev = np.std(weight_array)
 
+    # write to file
+    with(open('raw_data.txt', 'a')) as f:
+        f.write(str(time.time()) + "\t" + str(curr_weight) + "\n")
+
     # plot
-    plt.clf()
-    plt.plot(weight_array, 'b')
-    plt.pause(0.05)
+    #plt.clf()
+    #plt.plot(weight_array, 'b')
+    #plt.pause(0.05)
 
 
     #
-    print("mean = [{}]\tdev = [{}]".format(weight_mean, weight_dev))
+    #print("mean = [{}]\tdev = [{}]".format(weight_mean, weight_dev))
 
 #plt.show()
