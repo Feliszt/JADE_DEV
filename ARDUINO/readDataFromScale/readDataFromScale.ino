@@ -10,8 +10,8 @@
 #include <HX711.h>
 
 //pins:
-const int HX711_dout = 4; //mcu > HX711 dout pin
-const int HX711_sck = 5; //mcu > HX711 sck pin
+const int HX711_dout = 5; //mcu > HX711 dout pin
+const int HX711_sck = 4; //mcu > HX711 sck pin
 
 //HX711 constructor:
 HX711 loadCell;
@@ -29,6 +29,6 @@ void setup() {
 
 void loop() {
   //
-  float val = loadCell.read();
+  float val = loadCell.read_average(2);
   Serial.println(val);
 }
