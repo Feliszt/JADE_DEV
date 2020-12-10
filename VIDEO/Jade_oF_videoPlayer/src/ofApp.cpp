@@ -24,16 +24,25 @@ void ofApp::setup(){
 		// debug
 		ofLog() << "Loading video [" << dataFolder.getPath(i) << "]";
 	}
+
+	// load video
+	videos[0]->play();
+	videos[0]->setVolume(0.0);
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-
+	// update video
+	videos[0]->update();
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+	// background
+	ofBackground(0);
 
+	// play video
+	videos[0]->draw(0, 0);
 }
 
 //--------------------------------------------------------------
