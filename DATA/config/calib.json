@@ -1,1 +1,1 @@
-{"zero": -106825, "zero_date": "11-12-2020 20:58:19", "objects": [{"weight": 1202, "name": "ecocup"}, {"weight": 4138, "name": "bouteille"}, {"weight": 6246, "name": "etain"}]}
+{"zero": -106825, "zero_date": "11-12-2020 20:58:19", "objects": [{"weight": 1202, "name": "ecocup", "video_name" : "ecocup_video", "video_duration" : 18.2}, {"weight": 4138, "name": "bouteille", "video_name" : "bouteille_video", "video_duration" : 14.9}, {"weight": 6246, "name": "etain", "video_name" : "etain_video", "video_duration" : 20.6}]}
