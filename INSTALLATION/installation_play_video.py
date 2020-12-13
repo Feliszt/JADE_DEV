@@ -43,6 +43,10 @@ class VideoPlayer :
         # load calibration
         with open(self.config_folder + 'calib.json', 'r') as f_calib:
             self.calib = json.load(f_calib)
+            
+        # load config
+        with open(self.config_folder + 'config.json', 'r') as f_config:
+            self.config = json.load(f_config)
 
         # set up object list
         self.objects_on_scale = []
@@ -65,10 +69,11 @@ class VideoPlayer :
         # video variables
         self.curr_video = self.base_video
         self.next_video = self.base_video
+        self.video_proc = []
 
         # launch app
         self.n_iter = 0
-        self.delay = int(self.base_video["video_duration"] * 1000)
+        self.delay = 5
         self.update()
         self.window.mainloop()
 
@@ -76,9 +81,13 @@ class VideoPlayer :
     def update(self) :
         # update current video
         self.curr_video = self.next_video
+        self.delay = int(self.curr_video["video_duration"] * 1000)
 
         # actually plays the video
-        ####
+        for proc in self.video_proc :
+            proc.kill()
+        video_folder = "../DATA/videos/" + self.config["video_folder"]
+        #self.video_proc.append(subprocess.Popen(["omxplayer", self.curr_video["video_name"]])
 
         # get next video
         # at this point multiple things are possible
