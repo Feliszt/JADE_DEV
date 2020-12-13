@@ -1,3 +1,13 @@
+#
+#   installation_play_video_queue.py
+#
+#   This script listens to the OSC adress on which the objects put on and
+#   removed from the scale are written.
+#   It then plays a dynamic playlist of videos that depends on those objects,
+#   the link between each video and the video to play is written in "calib.json".
+#   This file is created by running calibration.py
+#
+
 # GUI
 from tkinter import *
 # OSC server
@@ -28,7 +38,7 @@ class VideoPlayer :
         self.canvas.pack(side = LEFT)
 
         # init folders name for data
-        self.config_folder = "../../DATA/config/"
+        self.config_folder = "../DATA/config/"
 
         # load calibration
         with open(self.config_folder + 'calib.json', 'r') as f_calib:
@@ -67,8 +77,8 @@ class VideoPlayer :
         # update current video
         self.curr_video = self.next_video
 
-        # debug
-        print("{}Playing [{}]\tduration = {}".format(base_debug, self.curr_video["video_name"], self.curr_video["video_duration"]))
+        # actually plays the video
+        ####
 
         # get next video
         # at this point multiple things are possible
@@ -92,8 +102,9 @@ class VideoPlayer :
                 next_video_index = curr_video_index + 1
                 self.next_video = self.objects_on_scale[next_video_index]
 
-        #
-        print("{}(update)\tnext video is [{}]".format(base_debug, self.next_video["video_name"]))
+
+        # debug
+        print("{}(update)\t[{}]\t=>\t[{}]".format(base_debug, self.curr_video["video_name"], self.next_video["video_name"]))
 
         # update loop
         self.n_iter += 1
@@ -123,7 +134,9 @@ class VideoPlayer :
         #print("{}{}".format(base_debug, [item["name"] for item in self.objects_on_scale]))
 
         # debug
-        print("{}(add_object)\tnext video is [{}]".format(base_debug, self.next_video["video_name"]))
+        objects_on_board_names = [el["name"] for el in self.objects_on_scale]
+        #print("{}(add_object)\t[{}]\t=>\t[{}]\t{}".format(base_debug, self.curr_video["video_name"], self.next_video["video_name"], objects_on_board_names))
+        print("{}(add_object)\t{}".format(base_debug, objects_on_board_names))
 
     # called when an object is removed from scale
     def remove_object(self, unused_addr, args):
@@ -155,7 +168,9 @@ class VideoPlayer :
             #print("{}{}".format(base_debug, [item["name"] for item in self.objects_on_scale]))
 
             # debug
-            print("{}(remove_object)\tnext video is [{}]".format(base_debug, self.next_video["video_name"]))
+            objects_on_board_names = [el["name"] for el in self.objects_on_scale]
+            #print("{}(remove_object)\t[{}]\t=>\t[{}]\t{}".format(base_debug, self.curr_video["video_name"], self.next_video["video_name"], objects_on_board_names))
+            print("{}(remove_object)\t{}".format(base_debug, objects_on_board_names))
 
 
 # main function

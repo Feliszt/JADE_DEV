@@ -1,6 +1,18 @@
+#
+#   get_zero.py
+#
+#   This script perform tar on the load sensor.
+#   The scale has to be empty for it to be efficient.
+#   It reads the data from the sensor and if it does not
+#   deviate past a specified threshold, it stores the mean.
+#
+
+# serial communication
 import serial
-import numpy as np
+# GUI
 import matplotlib.pyplot as plt
+# misc
+import numpy as np
 from sys import platform
 import json
 import datetime
@@ -37,14 +49,21 @@ window_size = config["window_size_zero"]
 window = []
 
 # loop
+error_decode_iter = 0
 loop_incr = 0
 while True:
     #
     loop_incr += 1
 
-    # decode
+    # get bytes from sensor and decode them
     ser_bytes = ser.readline()
-    decoded_bytes = ser_bytes.decode("utf-8")
+    try :
+        decoded_bytes = ser_bytes.decode("utf-8")
+        error_decode_iter = 0
+    except :
+        error_decode_iter += 1
+        print("{}ERROR IN DECODE [{}]".format(base_debug, error_decode_iter))
+        continue
     decoded_bytes = decoded_bytes.strip()
 
     if(decoded_bytes == '') :
@@ -72,7 +91,7 @@ while True:
         # store the result of the mean as the zero
         if(weight_dev <= config["sensitivity_zero"]) :
             # debug
-            print("{}zero = {}.".format(base_debug, weight_mean))
+            print("{}Saving zero =  [{}].".format(base_debug, weight_mean))
 
             # edit calib
             calib["zero"] = int(weight_mean)
@@ -84,11 +103,11 @@ while True:
                 json.dump(calib, f_calib)
 
             # quit get_zero app
+            print("{}Quitting.".format(base_debug))
             quit()
 
-    # plot
-    plt.clf()
-    plt.plot(window, 'b')
-    plt.pause(0.05)
-
-#plt.show()
+    # plot curve for debug purposes
+    if config["show_plot"]:
+        plt.clf()
+        plt.plot(window, 'b')
+        plt.pause(0.05)

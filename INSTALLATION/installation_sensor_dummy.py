@@ -1,8 +1,19 @@
+#
+#   installation_sensor_dummy.py
+#
+#   This script emulates the output of "installation_sensor.py"
+#   without having to be plugged to an actual load sensor.
+#   This is useful for testing and is run during the installation
+#   when we are facing technical issues with the sensor.
+#
+
+# osc client
+from pythonosc import udp_client
+# misc
 import os
 import json
 import time
 import random
-from pythonosc import udp_client
 
 # init folders name for data
 config_folder = "../DATA/config/"
@@ -17,16 +28,16 @@ print("{}start.".format(base_debug))
 # load calibration
 with open(config_folder + 'calib.json', 'r') as f_calib:
     calib = json.load(f_calib)
-    
+
 # init list of objects
 objects_on_scale = []
 
 # setup OSC
 osc_client = udp_client.SimpleUDPClient("127.0.0.1", 8000)
-    
+
 # loop that imitates adding and removing elements on scale
 while True :
-    
+
     # randomly decide to remove or add element
     if random.random() < 0.5 :
         # add element
@@ -41,9 +52,9 @@ while True :
                 object_to_remove = random.choice(objects_on_scale)
                 objects_on_scale.remove(object_to_remove)
                 osc_client.send_message("/remove", object_to_remove)
-            
+
     #
     print(objects_on_scale)
-            
+
     # sleep
     time.sleep(2)

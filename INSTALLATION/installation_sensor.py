@@ -1,8 +1,23 @@
-import os
+#
+#   installation_sensor.py
+#
+#   This script listens to the OSC adress on which the objects put on and
+#   removed from the scale are written.
+#   It then plays a dynamic playlist of videos that depends on those objects,
+#   the link between each video and the video to play is written in "calib.json".
+#   This file is created by running calibration.py
+#
+
+# serial communication
 import serial
-import numpy as np
+# osc client
+from pythonosc import udp_client
+# gui
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
+# misc
+import os
+import numpy as np
 from sys import platform
 import json
 import datetime
@@ -16,10 +31,6 @@ program_name = os.path.basename(__file__)
 # debug
 base_debug = "[{}]\t".format(program_name)
 print("{}start.".format(base_debug))
-
-# run zero
-subprocess.call(["python", "get_zero.py"])
-time.sleep(1)
 
 # configure serial port
 serial_port_name = ""
@@ -40,6 +51,11 @@ with open(config_folder + 'config.json', 'r') as f_config:
 with open(config_folder + 'calib.json', 'r') as f_calib:
     calib = json.load(f_calib)
 
+# run zero
+if config["perform_zero"] :
+    subprocess.call(["python", "get_zero.py"])
+    time.sleep(1)
+
 # init weight windows
 big_window_size = config["big_window_size"]
 small_window_size = config["small_window_size"]
@@ -55,18 +71,29 @@ prev_weight_mean = 0
 # board state
 objects_on_board = []
 
+# setup OSC client
+osc_client = udp_client.SimpleUDPClient("127.0.0.1", 8000)
+
 # set up matplotlib window
-fig = plt.figure(2, figsize=(7, 7))
+if config["show_plot"]:
+    fig = plt.figure(2, figsize=(7, 7))
 
 # loop
 loop_incr = 0
+error_decode_iter = 0
 while True:
     #
     loop_incr += 1
 
-    # decode
+    # get bytes from sensor and decode them
     ser_bytes = ser.readline()
-    decoded_bytes = ser_bytes.decode("utf-8")
+    try :
+        decoded_bytes = ser_bytes.decode("utf-8")
+        error_decode_iter = 0
+    except :
+        error_decode_iter += 1
+        print("{}ERROR IN DECODE [{}]".format(base_debug, error_decode_iter))
+        continue
     decoded_bytes = decoded_bytes.strip()
 
     if(decoded_bytes == '') :
@@ -105,7 +132,7 @@ while True:
         # detect leaving zero or level
         if state == 1 and prev_state == 0 :
             # debug
-            print("{}Leaving level".format(base_debug))
+            #print("{}Leaving level".format(base_debug))
 
             # save current level
             prev_level = weight_mean
@@ -113,7 +140,7 @@ while True:
         # detect reaching a level
         if state == 0 and prev_state == 1 :
             # debug
-            print("{}Reaching level".format(base_debug))
+            #print("{}Reaching level".format(base_debug))
 
             # get delta from previous level
             level_delta = weight_mean - prev_level
@@ -128,15 +155,17 @@ while True:
             # if we found a match, we either remove it or add it to the list
             if len(possible_objects) > 0 :
                 # remove or add to list
-                first_object_name = possible_objects[0]["name"]
+                first_object_name = possible_objects[0]
                 if level_delta_sign > 0 :
                     # add object, but check first if it's not already there
                     if first_object_name not in objects_on_board :
                         objects_on_board.append(first_object_name)
+                        osc_client.send_message("/add", first_object_name["name"])
                 else :
                     # remove object
                     if first_object_name in objects_on_board :
                         objects_on_board.remove(first_object_name)
+                        osc_client.send_message("/remove", first_object_name["name"])
             # no match! few things can happen
             # multiple objects have been added or removed at the same time
             # or an unknown object has been added or removed
@@ -144,11 +173,13 @@ while True:
 
             # if current weight is zero, we remove everything
             if total_weight < config["sensitivity_from_levels"] :
+                for el in objects_on_board :
+                    osc_client.send_message("/remove", el["name"])
                 objects_on_board = []
 
-
             # debug
-            print(objects_on_board)
+            objects_on_board_names = [el["name"] for el in objects_on_board]
+            #print("{}{}".format(base_debug, objects_on_board_names))
 
         # update weight
         prev_weight_mean = weight_mean
@@ -156,31 +187,31 @@ while True:
         # debug
         #print("{}value = {}\tmean = {}\tdev = {}".format(base_debug, int(curr_weight), int(weight_mean), int(weight_dev)))
 
-    # set graph color
-    graph_color = 'gray'
-    if state == 0 :
-        graph_color = 'green'
-    if state == 1 :
-        graph_color = 'red'
+    # plot curve for debug purposes
+    if config["show_plot"]:
+        # set graph color
+        graph_color = 'gray'
+        if state == 0 :
+            graph_color = 'green'
+        if state == 1 :
+            graph_color = 'red'
 
-    ## plot
-    plt.clf()
-    # draw big window
-    plt.plot(big_window, graph_color, linewidth = 2)
-    # draw horizontal line for current zero and sensitivity area
-    plt.axhline(y= zero, color = 'black', linewidth = 1)
-    plt.axhline(y= zero - config["sensitivity_from_levels"], linestyle = '--', color = 'black', linewidth = 1)
-    plt.axhline(y= zero + config["sensitivity_from_levels"], linestyle = '--', color = 'black', linewidth = 1)
-    # draw horizontal line for current weight mean
-    if state != -1:
-        plt.axhline(y = weight_mean, color = 'maroon', linewidth = 1)
-        #plt.axhline(y = weight_mean - 3 * weight_dev, linestyle = '--', color = 'maroon', linewidth = 1)
-        #plt.axhline(y = weight_mean + 3 * weight_dev, linestyle = '--', color = 'maroon', linewidth = 1)
-    # draw vertical line that shows small window
-    plt.axvline(x=max(0, len(big_window)-small_window_size), linewidth=1)
-    plt.pause(0.05)
+        ## plot
+        plt.clf()
+        # draw big window
+        plt.plot(big_window, graph_color, linewidth = 2)
+        # draw horizontal line for current zero and sensitivity area
+        plt.axhline(y= zero, color = 'black', linewidth = 1)
+        plt.axhline(y= zero - config["sensitivity_from_levels"], linestyle = '--', color = 'black', linewidth = 1)
+        plt.axhline(y= zero + config["sensitivity_from_levels"], linestyle = '--', color = 'black', linewidth = 1)
+        # draw horizontal line for current weight mean
+        if state != -1:
+            plt.axhline(y = weight_mean, color = 'maroon', linewidth = 1)
+            #plt.axhline(y = weight_mean - 3 * weight_dev, linestyle = '--', color = 'maroon', linewidth = 1)
+            #plt.axhline(y = weight_mean + 3 * weight_dev, linestyle = '--', color = 'maroon', linewidth = 1)
+        # draw vertical line that shows small window
+        plt.axvline(x=max(0, len(big_window)-small_window_size), linewidth=1)
+        plt.pause(0.05)
 
     # update state
     prev_state = state
-
-#plt.show()

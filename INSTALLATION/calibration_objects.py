@@ -11,7 +11,6 @@ import subprocess
 
 # save a level
 def save_level(event):
-
     # check state
     if state == -1 :
         print("{}Too soon to save level. Wait for analysis window to have enough samples.".format(base_debug))
