@@ -13,6 +13,8 @@
 import os
 import subprocess
 from sys import platform
+import time
+import json
 
 # get script name
 program_name = os.path.basename(__file__)
@@ -25,9 +27,22 @@ print("{}start.".format(base_debug))
 python_cmd = "python"
 if platform == "linux" or platform == "linux2" :
     python_cmd = "python3"
+    
+# init folders name for data
+config_folder = "../DATA/config/"
+
+# load config
+with open(config_folder + 'config.json', 'r') as f_config:
+    config = json.load(f_config)
 
 # run script 1
-subprocess.Popen([python_cmd, "installation_sensor.py"])
+if config["run_sensor"] :
+    subprocess.Popen([python_cmd, "installation_sensor.py"])
 
 # run script 2
-subprocess.Popen([python_cmd, "installation_play_video.py"])
+if config["run_video"] :
+    subprocess.Popen([python_cmd, "installation_play_video.py"])
+
+# run loop forever to catch keyboard interrupts
+while True :
+    time.sleep(1)

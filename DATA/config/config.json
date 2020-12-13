@@ -1,4 +1,6 @@
 {
+  "run_sensor" : true,
+  "run_video" : false,
   "window_size_zero" : 50,
   "big_window_size" : 50,
   "small_window_size" : 10,

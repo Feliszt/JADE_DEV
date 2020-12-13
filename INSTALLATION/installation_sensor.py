@@ -40,6 +40,11 @@ elif platform == "win32" :
     serial_port_name = "COM7"
 ser = serial.Serial(serial_port_name, 57600, timeout=1)
 
+# configure python command
+python_cmd = "python"
+if platform == "linux" or platform == "linux2" :
+    python_cmd = "python3"
+
 # init folders name for data
 config_folder = "../DATA/config/"
 
@@ -53,7 +58,7 @@ with open(config_folder + 'calib.json', 'r') as f_calib:
 
 # run zero
 if config["perform_zero"] :
-    subprocess.call(["python", "get_zero.py"])
+    subprocess.call([python_cmd, "get_zero.py"])
     time.sleep(1)
 
 # init weight windows
@@ -179,7 +184,7 @@ while True:
 
             # debug
             objects_on_board_names = [el["name"] for el in objects_on_board]
-            #print("{}{}".format(base_debug, objects_on_board_names))
+            print("{}{}".format(base_debug, objects_on_board_names))
 
         # update weight
         prev_weight_mean = weight_mean

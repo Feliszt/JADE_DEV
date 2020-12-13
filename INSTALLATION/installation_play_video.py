@@ -27,10 +27,10 @@ class VideoPlayer :
         self.window = _window
         self.window.title("Jade-playVideo")
         self.window.overrideredirect(True)
-        self.appW = 100
-        self.appH = 100
-        self.offX = 10
-        self.offY = 10
+        self.appW = 1920
+        self.appH = 1080
+        self.offX = 0
+        self.offY = 0
         self.window.geometry("{}x{}+{}+{}".format(self.appW, self.appH, self.offX, self.offY))
 
         # canvas
