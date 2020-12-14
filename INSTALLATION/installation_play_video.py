@@ -47,7 +47,7 @@ class VideoPlayer :
             
         # load config
         with open(self.config_folder + 'config.json', 'r') as f_config:
-            self.config = json.load(f_config)
+            self.config = json.load(f_config)        
 
         # set up object list
         self.objects_on_scale = []
@@ -105,12 +105,20 @@ class VideoPlayer :
                 curr_video_index = self.objects_on_scale.index(self.curr_video)
                 next_video_index = curr_video_index + 1
                 self.next_video = self.objects_on_scale[next_video_index]
+                
+        # get playing state
+        # we read a json file with only true or false in it to know if we play the file
+        # The "ko" alias is set to toggle this bool so that we can go out of the playing loop
+        with open(self.config_folder + "play.json", 'r') as f :
+            data = json.load(f)
+            play_state = data["play"]
 
         # actually plays the video
         video_folder = "../DATA/videos/" + self.config["video_folder"] + "/"
         video_file = video_folder + self.curr_video["video_name"] + ".mp4"
         #print("{}video_file = [{}]".format(base_debug, video_file))
-        subprocess.call(["omxplayer", video_file])
+        if play_state :
+            subprocess.call(["omxplayer", video_file])
 
         # debug
         print("{}(update)\t[{}]\t=>\t[{}]".format(base_debug, self.curr_video["video_name"], self.next_video["video_name"]))
