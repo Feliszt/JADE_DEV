@@ -1,6 +1,7 @@
 {
   "run_sensor" : true,
-  "run_video" : false,
+  "run_video" : true,
+  "perform_zero" : false,
   "window_size_zero" : 50,
   "big_window_size" : 50,
   "small_window_size" : 10,
@@ -8,6 +9,5 @@
   "flatness_sensitivity" : 100,
   "sensitivity_from_levels" : 600,
   "show_plot" : false,
-  "perform_zero" : false,
   "video_folder" : "placeholders"
 }

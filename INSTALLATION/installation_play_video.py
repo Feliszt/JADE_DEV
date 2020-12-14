@@ -18,6 +18,7 @@ import threading
 import os
 import json
 import time
+import subprocess
 
 # video player class
 class VideoPlayer :
@@ -27,8 +28,8 @@ class VideoPlayer :
         self.window = _window
         self.window.title("Jade-playVideo")
         self.window.overrideredirect(True)
-        self.appW = 1920
-        self.appH = 1080
+        self.appW = 10
+        self.appH = 10
         self.offX = 0
         self.offY = 0
         self.window.geometry("{}x{}+{}+{}".format(self.appW, self.appH, self.offX, self.offY))
@@ -73,7 +74,7 @@ class VideoPlayer :
 
         # launch app
         self.n_iter = 0
-        self.delay = 5
+        self.delay = 0
         self.update()
         self.window.mainloop()
 
@@ -81,14 +82,8 @@ class VideoPlayer :
     def update(self) :
         # update current video
         self.curr_video = self.next_video
-        self.delay = int(self.curr_video["video_duration"] * 1000)
-
-        # actually plays the video
-        for proc in self.video_proc :
-            proc.kill()
-        video_folder = "../DATA/videos/" + self.config["video_folder"]
-        #self.video_proc.append(subprocess.Popen(["omxplayer", self.curr_video["video_name"]])
-
+        #self.delay = int(self.curr_video["video_duration"] * 1000)
+        
         # get next video
         # at this point multiple things are possible
         # 1) we are playing base video, in that case curr_video will not be in the list of
@@ -111,6 +106,11 @@ class VideoPlayer :
                 next_video_index = curr_video_index + 1
                 self.next_video = self.objects_on_scale[next_video_index]
 
+        # actually plays the video
+        video_folder = "../DATA/videos/" + self.config["video_folder"] + "/"
+        video_file = video_folder + self.curr_video["video_name"] + ".mp4"
+        #print("{}video_file = [{}]".format(base_debug, video_file))
+        subprocess.call(["omxplayer", video_file])
 
         # debug
         print("{}(update)\t[{}]\t=>\t[{}]".format(base_debug, self.curr_video["video_name"], self.next_video["video_name"]))
@@ -145,7 +145,7 @@ class VideoPlayer :
         # debug
         objects_on_board_names = [el["name"] for el in self.objects_on_scale]
         #print("{}(add_object)\t[{}]\t=>\t[{}]\t{}".format(base_debug, self.curr_video["video_name"], self.next_video["video_name"], objects_on_board_names))
-        print("{}(add_object)\t{}".format(base_debug, objects_on_board_names))
+        #print("{}(add_object)\t{}".format(base_debug, objects_on_board_names))
 
     # called when an object is removed from scale
     def remove_object(self, unused_addr, args):
@@ -179,7 +179,7 @@ class VideoPlayer :
             # debug
             objects_on_board_names = [el["name"] for el in self.objects_on_scale]
             #print("{}(remove_object)\t[{}]\t=>\t[{}]\t{}".format(base_debug, self.curr_video["video_name"], self.next_video["video_name"], objects_on_board_names))
-            print("{}(remove_object)\t{}".format(base_debug, objects_on_board_names))
+            #print("{}(remove_object)\t{}".format(base_debug, objects_on_board_names))
 
 
 # main function
