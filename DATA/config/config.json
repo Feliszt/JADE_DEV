@@ -1,7 +1,8 @@
 {
   "run_sensor" : true,
   "run_video" : true,
-  "perform_zero" : false,
+  "perform_zero" : true,
+  "video_folder" : "placeholders",
   "window_size_zero" : 50,
   "big_window_size" : 50,
   "small_window_size" : 10,
@@ -9,5 +10,8 @@
   "flatness_sensitivity" : 100,
   "sensitivity_from_levels" : 600,
   "show_plot" : false,
-  "video_folder" : "placeholders"
+  "app_w" : 1920,
+  "app_h" : 1080,
+  "osc_addr" : "127.0.0.1",
+  "osc_port" : 8000
 }

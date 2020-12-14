@@ -25,12 +25,23 @@ import time
 import subprocess
 from itertools import compress
 
+# init folders name for data
+config_folder = "../DATA/config/"
+log_folder = "../DATA/log/"
+
+# function that allow writing a log file
+def write_to_log(el_to_write) :
+    date_str = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    with open(log_folder + "log.txt", 'a') as f_log :
+        f_log.write("[" + date_str + "]\t" + el_to_write + "\n")
+
 # get script name
 program_name = os.path.basename(__file__)
 
 # debug
 base_debug = "[{}]\t".format(program_name)
 print("{}start.".format(base_debug))
+write_to_log("{}start.".format(base_debug))
 
 # configure serial port
 serial_port_name = ""
@@ -38,15 +49,19 @@ if platform == "linux" or platform == "linux2" :
     serial_port_name = "/dev/ttyACM0"
 elif platform == "win32" :
     serial_port_name = "COM7"
-ser = serial.Serial(serial_port_name, 57600, timeout=1)
+    
+try :
+    ser = serial.Serial(serial_port_name, 57600, timeout=1)
+except :
+    write_to_log("{}Can't open serial. Quitting.".format(base_debug))
+    quit()
 
 # configure python command
 python_cmd = "python"
 if platform == "linux" or platform == "linux2" :
     python_cmd = "python3"
 
-# init folders name for data
-config_folder = "../DATA/config/"
+
 
 # load config
 with open(config_folder + 'config.json', 'r') as f_config:
@@ -55,11 +70,6 @@ with open(config_folder + 'config.json', 'r') as f_config:
 # load calib
 with open(config_folder + 'calib.json', 'r') as f_calib:
     calib = json.load(f_calib)
-
-# run zero
-if config["perform_zero"] :
-    subprocess.call([python_cmd, "get_zero.py"])
-    time.sleep(1)
 
 # init weight windows
 big_window_size = config["big_window_size"]
@@ -77,7 +87,7 @@ prev_weight_mean = 0
 objects_on_board = []
 
 # setup OSC client
-osc_client = udp_client.SimpleUDPClient("127.0.0.1", 8000)
+osc_client = udp_client.SimpleUDPClient(config["osc_addr"], config["osc_port"])
 
 # set up matplotlib window
 if config["show_plot"]:
@@ -185,6 +195,7 @@ while True:
             # debug
             objects_on_board_names = [el["name"] for el in objects_on_board]
             print("{}{}".format(base_debug, objects_on_board_names))
+            write_to_log("{}{}".format(base_debug, objects_on_board_names))
 
         # update weight
         prev_weight_mean = weight_mean

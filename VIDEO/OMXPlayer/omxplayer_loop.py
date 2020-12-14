@@ -12,6 +12,8 @@ while True :
         data = json.load(f)
         play_state = data["play"]
 
-    print(play_state)
+    #
     if play_state :
         subprocess.call(["omxplayer", video_file])
+    else :    
+        time.sleep(1)

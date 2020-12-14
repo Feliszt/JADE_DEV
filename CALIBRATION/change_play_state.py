@@ -12,5 +12,6 @@ play_state = data["play"]
 # edit
 new_data = {}
 new_data["play"] = not play_state
+print(not play_state)
 with open(json_file, "w") as f:
     json.dump(new_data, f)

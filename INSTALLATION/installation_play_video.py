@@ -18,28 +18,19 @@ import threading
 import os
 import json
 import time
+import datetime
 import subprocess
 
 # video player class
 class VideoPlayer :
     # init
     def __init__(self, _window) :
-        # window
-        self.window = _window
-        self.window.title("Jade-playVideo")
-        self.window.overrideredirect(True)
-        self.appW = 10
-        self.appH = 10
-        self.offX = 0
-        self.offY = 0
-        self.window.geometry("{}x{}+{}+{}".format(self.appW, self.appH, self.offX, self.offY))
-
-        # canvas
-        self.canvas = Canvas(self.window, width=self.appW, height=self.appH, bd=0, highlightthickness=0, relief='ridge', bg='black')
-        self.canvas.pack(side = LEFT)
-
         # init folders name for data
         self.config_folder = "../DATA/config/"
+        self.log_folder = "../DATA/log/"
+        
+        # log
+        self.write_to_log("{}start.".format(base_debug))
 
         # load calibration
         with open(self.config_folder + 'calib.json', 'r') as f_calib:
@@ -47,7 +38,19 @@ class VideoPlayer :
             
         # load config
         with open(self.config_folder + 'config.json', 'r') as f_config:
-            self.config = json.load(f_config)        
+            self.config = json.load(f_config)
+            
+        # window
+        self.window = _window
+        self.window.overrideredirect(True)
+        self.app_w = self.config["app_w"]
+        self.app_h = self.config["app_h"]
+        self.window.geometry("{}x{}+{}+{}".format(self.app_w, self.app_h, 0, 0))
+        #self.window.geometry("{}x{}+{}+{}".format(10, 10, 0, 0))
+
+        # canvas
+        self.canvas = Canvas(self.window, width=self.app_w, height=self.app_h, bd=0, highlightthickness=0, relief='ridge', bg='black')
+        self.canvas.pack(side = LEFT)    
 
         # set up object list
         self.objects_on_scale = []
@@ -62,7 +65,7 @@ class VideoPlayer :
         self.dispatcher.map("/remove", self.remove_object)
 
         # launch osc server
-        self.server = osc_server.ThreadingOSCUDPServer(("127.0.0.1", 8000), self.dispatcher)
+        self.server = osc_server.ThreadingOSCUDPServer((self.config["osc_addr"], self.config["osc_port"]), self.dispatcher)
         self.server_thread = threading.Thread(target = self.server.serve_forever)
         self.server_thread.daemon=True
         self.server_thread.start()
@@ -74,54 +77,58 @@ class VideoPlayer :
 
         # launch app
         self.n_iter = 0
-        self.delay = 0
+        self.delay = 1
         self.update()
         self.window.mainloop()
 
     # loop function
     def update(self) :
-        # update current video
-        self.curr_video = self.next_video
-        #self.delay = int(self.curr_video["video_duration"] * 1000)
-        
-        # get next video
-        # at this point multiple things are possible
-        # 1) we are playing base video, in that case curr_video will not be in the list of
-        # objects on the scale
-        # 1-a) there are no objects on the scale : next_video is base_video
-        # 1-b) there are objects on the scale : next_video is first object on objects list
-        # 2) we are playing a video from the list
-        # 2-a) we are playing the last video of the list : next_video is base_video
-        # 2-b) we are not playing the last video of the list : next_video is the one that arrives after
-        if self.curr_video == self.base_video :
-            if len(self.objects_on_scale) == 0 :
-                self.next_video = self.base_video
+        #
+        if self.n_iter >= 5 :
+            # update current video
+            self.curr_video = self.next_video
+            #self.delay = int(self.curr_video["video_duration"] * 1000) - 0
+            
+            # get next video
+            # at this point multiple things are possible
+            # 1) we are playing base video, in that case curr_video will not be in the list of
+            # objects on the scale
+            # 1-a) there are no objects on the scale : next_video is base_video
+            # 1-b) there are objects on the scale : next_video is first object on objects list
+            # 2) we are playing a video from the list
+            # 2-a) we are playing the last video of the list : next_video is base_video
+            # 2-b) we are not playing the last video of the list : next_video is the one that arrives after
+            if self.curr_video == self.base_video :
+                if len(self.objects_on_scale) == 0 :
+                    self.next_video = self.base_video
+                else :
+                    self.next_video = self.objects_on_scale[0]
             else :
-                self.next_video = self.objects_on_scale[0]
-        else :
-            if self.curr_video == self.objects_on_scale[-1] :
-                self.next_video = self.base_video
+                if self.curr_video == self.objects_on_scale[-1] :
+                    self.next_video = self.base_video
+                else :
+                    curr_video_index = self.objects_on_scale.index(self.curr_video)
+                    next_video_index = curr_video_index + 1
+                    self.next_video = self.objects_on_scale[next_video_index]
+                    
+            # get playing state
+            # we read a json file with only true or false in it to know if we play the file
+            # The "ko" alias is set to toggle this bool so that we can go out of the playing loop
+            with open(self.config_folder + "play.json", 'r') as f :
+                data = json.load(f)
+                play_state = data["play"]
+
+            # actually plays the video
+            video_folder = "../DATA/videos/" + self.config["video_folder"] + "/"
+            video_file = video_folder + self.curr_video["video_name"] + ".mp4"
+            #print("{}video_file = [{}]".format(base_debug, video_file))
+            if play_state :
+                subprocess.call(["omxplayer", video_file])
             else :
-                curr_video_index = self.objects_on_scale.index(self.curr_video)
-                next_video_index = curr_video_index + 1
-                self.next_video = self.objects_on_scale[next_video_index]
-                
-        # get playing state
-        # we read a json file with only true or false in it to know if we play the file
-        # The "ko" alias is set to toggle this bool so that we can go out of the playing loop
-        with open(self.config_folder + "play.json", 'r') as f :
-            data = json.load(f)
-            play_state = data["play"]
+                time.sleep(1)
 
-        # actually plays the video
-        video_folder = "../DATA/videos/" + self.config["video_folder"] + "/"
-        video_file = video_folder + self.curr_video["video_name"] + ".mp4"
-        #print("{}video_file = [{}]".format(base_debug, video_file))
-        if play_state :
-            subprocess.call(["omxplayer", video_file])
-
-        # debug
-        print("{}(update)\t[{}]\t=>\t[{}]".format(base_debug, self.curr_video["video_name"], self.next_video["video_name"]))
+            # debug
+            print("{}(update)\t[{}]\t=>\t[{}]".format(base_debug, self.curr_video["video_name"], self.next_video["video_name"]))
 
         # update loop
         self.n_iter += 1
@@ -154,6 +161,7 @@ class VideoPlayer :
         objects_on_board_names = [el["name"] for el in self.objects_on_scale]
         #print("{}(add_object)\t[{}]\t=>\t[{}]\t{}".format(base_debug, self.curr_video["video_name"], self.next_video["video_name"], objects_on_board_names))
         #print("{}(add_object)\t{}".format(base_debug, objects_on_board_names))
+        self.write_to_log("{}(add_object)\t{}".format(base_debug, objects_on_board_names))
 
     # called when an object is removed from scale
     def remove_object(self, unused_addr, args):
@@ -188,6 +196,13 @@ class VideoPlayer :
             objects_on_board_names = [el["name"] for el in self.objects_on_scale]
             #print("{}(remove_object)\t[{}]\t=>\t[{}]\t{}".format(base_debug, self.curr_video["video_name"], self.next_video["video_name"], objects_on_board_names))
             #print("{}(remove_object)\t{}".format(base_debug, objects_on_board_names))
+            self.write_to_log("{}(remove_object)\t{}".format(base_debug, objects_on_board_names))
+            
+    # function that allow writing a log file
+    def write_to_log(self, el_to_write) :
+        date_str = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+        with open(self.log_folder + "log.txt", 'a') as f_log :
+            f_log.write("[" + date_str + "]\t" + el_to_write + "\n")
 
 
 # main function
@@ -200,4 +215,4 @@ if __name__ == "__main__" :
     print("{}start.".format(base_debug))
 
     #
-    vP = VideoPlayer(Tk())
+    VideoPlayer(Tk())

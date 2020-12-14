@@ -18,12 +18,23 @@ import json
 import datetime
 import os
 
+# init folders name for data
+config_folder = "../DATA/config/"
+log_folder = "../DATA/log/"
+
+# function that allow writing a log file
+def write_to_log(el_to_write) :
+    date_str = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    with open(log_folder + "log.txt", 'a') as f_log :
+        f_log.write("[" + date_str + "]\t" + el_to_write + "\n")
+
 # get script name
 program_name = os.path.basename(__file__)
 
 # debug
 base_debug = "[{}]   \t".format(program_name)
 print("{}start.".format(base_debug))
+write_to_log("{}start.".format(base_debug))
 
 # configure serial port
 serial_port_name = ""
@@ -33,8 +44,7 @@ elif platform == "win32" :
     serial_port_name = "COM7"
 ser = serial.Serial(serial_port_name, 57600, timeout=1)
 
-# init folders name for data
-config_folder = "../DATA/config/"
+
 
 # load config
 with open(config_folder + 'config.json', 'r') as f_config:
@@ -91,7 +101,8 @@ while True:
         # store the result of the mean as the zero
         if(weight_dev <= config["sensitivity_zero"]) :
             # debug
-            print("{}Saving zero =  [{}].".format(base_debug, weight_mean))
+            print("{}Saving zero =  [{}]. Quitting.".format(base_debug, weight_mean))
+            write_to_log("{}Saving zero =  [{}]. Quitting.".format(base_debug, weight_mean))
 
             # edit calib
             calib["zero"] = int(weight_mean)
@@ -103,7 +114,6 @@ while True:
                 json.dump(calib, f_calib)
 
             # quit get_zero app
-            print("{}Quitting.".format(base_debug))
             quit()
 
     # plot curve for debug purposes
