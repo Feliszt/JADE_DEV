@@ -107,7 +107,7 @@ osc_client = udp_client.SimpleUDPClient(config["osc_addr"], config["osc_port"])
 
 # set up matplotlib window
 if config["show_plot"]:
-    fig = plt.figure(2, figsize=(7, 7))
+    fig = plt.figure(2, figsize=(5, 5))
 
 # loop
 loop_incr = 0
@@ -163,7 +163,7 @@ while True:
         # detect leaving zero or level
         if state == 1 and prev_state == 0 :
             # debug
-            #print("{}Leaving level".format(base_debug))
+            #print("{}Leaving level [{}]".format(base_debug, weight_mean))
 
             # save current level
             prev_level = weight_mean
@@ -171,7 +171,7 @@ while True:
         # detect reaching a level
         if state == 0 and prev_state == 1 :
             # debug
-            #print("{}Reaching level".format(base_debug))
+            #print("{}Reaching level [{}]".format(base_debug, weight_mean))
 
             # get delta from previous level
             level_delta = weight_mean - prev_level
@@ -183,37 +183,56 @@ while True:
             possible_objects_bool = np.array(dist_to_objects) < config["sensitivity_from_levels"]
             possible_objects = list(compress(calib["objects"], possible_objects_bool))
             possible_objects_dist = list(compress(dist_to_objects, possible_objects_bool))
+            possible_objects_all = [(object, dist) for object, dist in zip(possible_objects, possible_objects_dist)]
+            possible_objects_all.sort(key=lambda x:x[1])
 
-            print("{}{}\t{}".format(base_debug, possible_objects, possible_objects_dist))
+            #print("{}{}".format(base_debug, possible_objects_all))
 
             # if we found a match, we either remove it or add it to the list
             if len(possible_objects) > 0 :
-                # remove or add to list
-                first_object_name = possible_objects[0]
                 if level_delta_sign > 0 :
-                    # add object, but check first if it's not already there
-                    if first_object_name not in objects_on_board :
-                        objects_on_board.append(first_object_name)
-                        osc_client.send_message("/add", first_object_name["name"])
+                    iter = 0
+                    while iter < len(possible_objects_all) :
+                        if possible_objects_all[iter][0] not in objects_on_board :
+                            possible_object = possible_objects_all[iter][0]
+                            objects_on_board.append(possible_object)
+                            osc_client.send_message("/add", possible_object["name"])
+                            #print("{}Adding [{}] on the board.".format(base_debug, possible_object["name"]))
+                            break
+                        iter += 1
                 else :
                     # remove object
-                    if first_object_name in objects_on_board :
-                        objects_on_board.remove(first_object_name)
-                        osc_client.send_message("/remove", first_object_name["name"])
+                    iter = 0
+                    while iter < len(possible_objects_all) :
+                        if possible_objects_all[iter][0] in objects_on_board :
+                            possible_object = possible_objects_all[iter][0]
+                            objects_on_board.remove(possible_objects_all[iter][0])
+                            osc_client.send_message("/remove", possible_object["name"])
+                            #print("{}Removing [{}] from the board.".format(base_debug, possible_object["name"]))
+                            break
+                        iter += 1
             # no match! few things can happen
             # multiple objects have been added or removed at the same time
             # or an unknown object has been added or removed
             #else :
 
             # if current weight is zero, we remove everything
-            if total_weight < config["sensitivity_from_levels"] :
+            trust_level = 1.0
+            if total_weight < config["sensitivity_from_zero"] :
                 for el in objects_on_board :
                     osc_client.send_message("/remove", el["name"])
                 objects_on_board = []
+            # check trust level
+            else:
+                total_weight_from_list = 0
+                for el in objects_on_board :
+                    total_weight_from_list += el["weight"]
+                trust_level = abs(total_weight - total_weight_from_list)
 
             # debug
             objects_on_board_names = [el["name"] for el in objects_on_board]
-            print("{}{}".format(base_debug, objects_on_board_names))
+            print("{}{}".format(base_debug, objects_on_board_names, trust_level))
+            print("{}trust = {}".format(base_debug, trust_level))
             write_to_log("{}{}".format(base_debug, objects_on_board_names))
 
         # update weight
@@ -237,8 +256,8 @@ while True:
         plt.plot(big_window, graph_color, linewidth = 2)
         # draw horizontal line for current zero and sensitivity area
         plt.axhline(y= zero, color = 'black', linewidth = 1)
-        plt.axhline(y= zero - config["sensitivity_from_levels"], linestyle = '--', color = 'black', linewidth = 1)
-        plt.axhline(y= zero + config["sensitivity_from_levels"], linestyle = '--', color = 'black', linewidth = 1)
+        plt.axhline(y= zero - config["sensitivity_from_zero"], linestyle = '--', color = 'black', linewidth = 1)
+        plt.axhline(y= zero + config["sensitivity_from_zero"], linestyle = '--', color = 'black', linewidth = 1)
         # draw horizontal line for current weight mean
         if state != -1:
             plt.axhline(y = weight_mean, color = 'maroon', linewidth = 1)

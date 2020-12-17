@@ -82,7 +82,7 @@ window = []
 # loop
 error_decode_iter = 0
 loop_incr = 0
-start_time = time.now()
+start_time = time.time()
 while True:
     #
     loop_incr += 1
@@ -139,7 +139,7 @@ while True:
             quit()
 
         # if the app has been running for a long time, we do not set the zero
-        if abs(time.now() - start_time) >= 60:
+        if abs(time.time() - start_time) >= 60:
             # debug
             print("{}Too long to set zero. Quitting.".format(base_debug))
             write_to_log("{}Too long to set zero. Quitting.".format(base_debug))
