@@ -46,7 +46,8 @@ class VideoPlayer :
         self.app_w = self.config["app_w"]
         self.app_h = self.config["app_h"]
         self.window.geometry("{}x{}+{}+{}".format(self.app_w, self.app_h, 0, 0))
-        #self.window.geometry("{}x{}+{}+{}".format(10, 10, 0, 0))
+        if self.config["small_tk_window"] :
+            self.window.geometry("{}x{}+{}+{}".format(10, 10, 0, 0))
 
         # canvas
         self.canvas = Canvas(self.window, width=self.app_w, height=self.app_h, bd=0, highlightthickness=0, relief='ridge', bg='black')
@@ -123,12 +124,18 @@ class VideoPlayer :
             video_file = video_folder + self.curr_video["name"] + ".mp4"
             #print("{}video_file = [{}]".format(base_debug, video_file))
             if play_state and not self.curr_video == self.base_video:
-                subprocess.call(["omxplayer", video_file])
+                try :
+                    subprocess.call(["omxplayer", video_file])
+                except :
+                    print("{}Could not play video [{}]".format(base_debug, video_file))
+                    self.write_to_log("{}Could not play video [{}]".format(base_debug, video_file))
             else :
                 time.sleep(1)
 
             # debug
             print("{}(update)\t[{}]\t=>\t[{}]".format(base_debug, self.curr_video["name"], self.next_video["name"]))
+            if self.curr_video != self.base_video :
+                self.write_to_log("{}(update)\t[{}]\t=>\t[{}]".format(base_debug, self.curr_video["name"], self.next_video["name"]))
 
         # update loop
         self.n_iter += 1
@@ -161,7 +168,7 @@ class VideoPlayer :
         objects_on_board_names = [el["name"] for el in self.objects_on_scale]
         #print("{}(add_object)\t[{}]\t=>\t[{}]\t{}".format(base_debug, self.curr_video["video_name"], self.next_video["video_name"], objects_on_board_names))
         #print("{}(add_object)\t{}".format(base_debug, objects_on_board_names))
-        self.write_to_log("{}(add_object)\t{}".format(base_debug, objects_on_board_names))
+        #self.write_to_log("{}(add_object)\t{}".format(base_debug, objects_on_board_names))
 
     # called when an object is removed from scale
     def remove_object(self, unused_addr, args):
@@ -196,7 +203,7 @@ class VideoPlayer :
             objects_on_board_names = [el["name"] for el in self.objects_on_scale]
             #print("{}(remove_object)\t[{}]\t=>\t[{}]\t{}".format(base_debug, self.curr_video["video_name"], self.next_video["video_name"], objects_on_board_names))
             #print("{}(remove_object)\t{}".format(base_debug, objects_on_board_names))
-            self.write_to_log("{}(remove_object)\t{}".format(base_debug, objects_on_board_names))
+            #self.write_to_log("{}(remove_object)\t{}".format(base_debug, objects_on_board_names))
             
     # function that allow writing a log file
     def write_to_log(self, el_to_write) :

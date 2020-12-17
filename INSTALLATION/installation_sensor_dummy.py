@@ -17,6 +17,13 @@ import random
 
 # init folders name for data
 config_folder = "../DATA/config/"
+log_folder = "../DATA/log/"
+
+# function that allow writing a log file
+def write_to_log(el_to_write) :
+    date_str = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    with open(log_folder + "log.txt", 'a') as f_log :
+        f_log.write("[" + date_str + "]\t" + el_to_write + "\n")
 
 # get script name
 program_name = os.path.basename(__file__)
@@ -24,6 +31,7 @@ program_name = os.path.basename(__file__)
 # debug
 base_debug = "[{}]\t".format(program_name)
 print("{}start.".format(base_debug))
+write_to_log("{}start.".format(base_debug))
 
 # load calibration
 with open(config_folder + 'calib.json', 'r') as f_calib:
@@ -50,12 +58,14 @@ while True :
             if object_to_add["name"] not in objects_on_scale :
                 objects_on_scale.append(object_to_add["name"])
                 osc_client.send_message("/add", object_to_add["name"])
+                write_to_log("{}{}".format(base_debug, objects_on_scale))
         # remove element
         else:
             if len(objects_on_scale) > 0 :
                 object_to_remove = random.choice(objects_on_scale)
                 objects_on_scale.remove(object_to_remove)
                 osc_client.send_message("/remove", object_to_remove)
+                write_to_log("{}{}".format(base_debug, objects_on_scale))
 
     #
     print(objects_on_scale)

@@ -2,8 +2,7 @@
   "zero": 80373,
   "zero_date": "17-12-2020 12:06:13",
   "base_video": {
-    "video_name": "base_video",
-    "video_duration": 10.24
+    "name": "base"
   },
   "objects": [
     {
