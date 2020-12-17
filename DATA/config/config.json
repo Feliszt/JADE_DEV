@@ -9,6 +9,7 @@
   "sensitivity_zero" : 40,
   "flatness_sensitivity" : 100,
   "sensitivity_from_levels" : 600,
+  "sensitivity_from_zero" : 1000,
   "show_plot" : true,
   "app_w" : 1920,
   "app_h" : 1080,

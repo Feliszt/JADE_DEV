@@ -38,6 +38,11 @@ def write_to_log(el_to_write) :
 # get script name
 program_name = os.path.basename(__file__)
 
+# configure python command
+python_cmd = "python"
+if platform == "linux" or platform == "linux2" :
+    python_cmd = "python3"
+
 # debug
 base_debug = "[{}]\t".format(program_name)
 print("{}start.".format(base_debug))
@@ -50,16 +55,29 @@ if platform == "linux" or platform == "linux2" :
 elif platform == "win32" :
     serial_port_name = "COM7"
 
-try :
-    ser = serial.Serial(serial_port_name, 57600, timeout=1)
-except :
-    write_to_log("{}Can't open serial. Quitting.".format(base_debug))
-    quit()
+# connect to serial
+has_serial = False
+serial_tries = 0
+while serial_tries < 5 :
+    serial_tries += 1
+    try :
+        ser = serial.Serial(serial_port_name, 57600, timeout=1)
+        has_serial = True
+        break
+    except :
+        print("{}Can't access serial port. Try #{}.".format(base_debug, serial_tries))
+        write_to_log("{}Can't access serial port. Try #{}.".format(base_debug, serial_tries))
+        time.sleep(1)
 
-# configure python command
-python_cmd = "python"
-if platform == "linux" or platform == "linux2" :
-    python_cmd = "python3"
+# check if we managed to connect to serial
+if not has_serial :
+    print("{}Could not connect to serial. Launching dummy sensor inputs and quitting.".format(base_debug))
+    write_to_log("{}Could not connect to serial. Launching dummy and quitting.".format(base_debug))
+    subprocess.Popen([python_cmd, "installation_sensor_dummy.py"])
+    quit()
+else :
+    print("{}Connection to serial done.".format(base_debug))
+    write_to_log("{}Connection to serial done.".format(base_debug))
 
 # load config
 with open(config_folder + 'config.json', 'r') as f_config:
@@ -112,7 +130,7 @@ while True:
     if(decoded_bytes == '') :
         continue
 
-    # get measure as flot
+    # get measure as float
     curr_weight = float(decoded_bytes)
 
     # store a big window of data
