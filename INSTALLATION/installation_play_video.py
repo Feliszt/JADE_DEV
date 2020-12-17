@@ -120,15 +120,15 @@ class VideoPlayer :
 
             # actually plays the video
             video_folder = "../DATA/videos/" + self.config["video_folder"] + "/"
-            video_file = video_folder + self.curr_video["video_name"] + ".mp4"
+            video_file = video_folder + self.curr_video["name"] + ".mp4"
             #print("{}video_file = [{}]".format(base_debug, video_file))
-            if play_state :
+            if play_state and not self.curr_video == self.base_video:
                 subprocess.call(["omxplayer", video_file])
             else :
                 time.sleep(1)
 
             # debug
-            print("{}(update)\t[{}]\t=>\t[{}]".format(base_debug, self.curr_video["video_name"], self.next_video["video_name"]))
+            print("{}(update)\t[{}]\t=>\t[{}]".format(base_debug, self.curr_video["name"], self.next_video["name"]))
 
         # update loop
         self.n_iter += 1

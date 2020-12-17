@@ -5,7 +5,7 @@ import os
 
 # set files and folder
 play_file = "../../DATA/config/play.json"
-video_folder = "../../DATA/videos/placeholders/"
+video_folder = "../../DATA/videos/install/"
 video_files = [video_folder + file for file in os.listdir(video_folder)]
 
 

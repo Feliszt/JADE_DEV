@@ -28,20 +28,24 @@ print("{}start.".format(base_debug))
 # load calibration
 with open(config_folder + 'calib.json', 'r') as f_calib:
     calib = json.load(f_calib)
+    
+# load calibration
+with open(config_folder + 'config.json', 'r') as f_config:
+    config = json.load(f_config)
 
 # init list of objects
 objects_on_scale = []
 
 # setup OSC
-osc_client = udp_client.SimpleUDPClient("127.0.0.1", 8000)
+osc_client = udp_client.SimpleUDPClient(config["osc_addr"], config["osc_port"])
 
 # loop that imitates adding and removing elements on scale
 while True :
 
     # randomly decide to remove or add element
-    if random.random() < 0.5 :
+    if random.random() < 0.2 :
         # add element
-        if random.random() < 0.5 :
+        if random.random() < 0.4 :
             object_to_add = random.choice(calib["objects"])
             if object_to_add["name"] not in objects_on_scale :
                 objects_on_scale.append(object_to_add["name"])
