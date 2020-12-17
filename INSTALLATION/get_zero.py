@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sys import platform
 import json
+import time
 import datetime
 import os
 
@@ -42,7 +43,29 @@ if platform == "linux" or platform == "linux2" :
     serial_port_name = "/dev/ttyACM0"
 elif platform == "win32" :
     serial_port_name = "COM7"
-ser = serial.Serial(serial_port_name, 57600, timeout=1)
+
+# connect to serial
+has_serial = False
+serial_tries = 0
+while serial_tries < 5 :
+    serial_tries += 1
+    try :
+        ser = serial.Serial(serial_port_name, 57600, timeout=1)
+        has_serial = True
+        break
+    except :
+        print("{}Can't access serial port. Try #{}.".format(base_debug, serial_tries))
+        write_to_log("{}Can't access serial port. Try #{}.".format(base_debug, serial_tries))
+        time.sleep(1)
+
+# check if we managed to connect to serial
+if not has_serial :
+    print("{}Could not connect to serial. Quitting.".format(base_debug))
+    write_to_log("{}Could not connect to serial. Quitting.".format(base_debug))
+    quit()
+else :
+    print("{}Connection to serial done.".format(base_debug))
+    write_to_log("{}Connection to serial done.".format(base_debug))
 
 # load config
 with open(config_folder + 'config.json', 'r') as f_config:
@@ -59,6 +82,7 @@ window = []
 # loop
 error_decode_iter = 0
 loop_incr = 0
+start_time = time.now()
 while True:
     #
     loop_incr += 1
@@ -113,6 +137,14 @@ while True:
 
             # quit get_zero app
             quit()
+
+        # if the app has been running for a long time, we do not set the zero
+        if abs(time.now() - start_time) >= 60:
+            # debug
+            print("{}Too long to set zero. Quitting.".format(base_debug))
+            write_to_log("{}Too long to set zero. Quitting.".format(base_debug))
+            quit()
+
 
     # plot curve for debug purposes
     if config["show_plot"]:
