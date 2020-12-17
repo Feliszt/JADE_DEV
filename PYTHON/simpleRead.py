@@ -14,7 +14,7 @@ ser = serial.Serial(serial_port_name, 57600, timeout=1)
 
 # init arrays
 array_size_big = 500
-array_size_small = 5
+array_size_small = 10
 weight_array_big = []
 weight_array_small = []
 

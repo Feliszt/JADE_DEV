@@ -9,7 +9,7 @@
   "sensitivity_zero" : 40,
   "flatness_sensitivity" : 100,
   "sensitivity_from_levels" : 600,
-  "show_plot" : false,
+  "show_plot" : true,
   "app_w" : 1920,
   "app_h" : 1080,
   "osc_addr" : "127.0.0.1",

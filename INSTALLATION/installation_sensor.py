@@ -49,7 +49,7 @@ if platform == "linux" or platform == "linux2" :
     serial_port_name = "/dev/ttyACM0"
 elif platform == "win32" :
     serial_port_name = "COM7"
-    
+
 try :
     ser = serial.Serial(serial_port_name, 57600, timeout=1)
 except :
@@ -60,8 +60,6 @@ except :
 python_cmd = "python"
 if platform == "linux" or platform == "linux2" :
     python_cmd = "python3"
-
-
 
 # load config
 with open(config_folder + 'config.json', 'r') as f_config:
@@ -164,8 +162,11 @@ while True:
 
             # get distance to all objects and detect object
             dist_to_objects = [abs(level_delta - object["weight"]) for object in calib["objects"]]
-            possible_objects = np.array(dist_to_objects) < config["sensitivity_from_levels"]
-            possible_objects = list(compress(calib["objects"], possible_objects))
+            possible_objects_bool = np.array(dist_to_objects) < config["sensitivity_from_levels"]
+            possible_objects = list(compress(calib["objects"], possible_objects_bool))
+            possible_objects_dist = list(compress(dist_to_objects, possible_objects_bool))
+
+            print("{}{}\t{}".format(base_debug, possible_objects, possible_objects_dist))
 
             # if we found a match, we either remove it or add it to the list
             if len(possible_objects) > 0 :

@@ -22,8 +22,12 @@ def save_level(event):
         print("{}Can't save level. Too much instability.".format(base_debug))
         return
 
+    # get user defined name
+    level_name = input("Enter the name for this object : ")
+
     # compute absolute difference between this level and zero
     level_weight = int(abs(zero - weight_mean))
+    levels.append(level_weight)
 
     # update nb_objects
     nb_objects = len(calib["objects"])
@@ -31,13 +35,16 @@ def save_level(event):
     # save to json
     object = {}
     object["weight"] = level_weight
-    object["name"] = "object #" + str(nb_objects + 1)
+    object["name"] = level_name
     calib["objects"].append(object)
 
     # update calibration file
     with open(config_folder + 'calib.json', 'w') as f_calib:
         # write file
         json.dump(calib, f_calib)
+
+    # debug
+    print("{}Level [{}] saved.".format(base_debug, level_weight))
 
 # get script name
 program_name = os.path.basename(__file__)
@@ -47,7 +54,7 @@ base_debug = "[{}]\t".format(program_name)
 print("{}start.".format(base_debug))
 
 # run zero
-subprocess.call(["python", "get_zero.py"])
+subprocess.call(["python", "../INSTALLATION/get_zero.py"])
 time.sleep(1)
 
 # configure serial port
@@ -62,11 +69,11 @@ ser = serial.Serial(serial_port_name, 57600, timeout=1)
 config_folder = "../DATA/config/"
 
 # load config
-with open(config_folder + 'config.json', 'r') as f_config:
+with open(config_folder + 'config.json', 'r') as f_config :
     config = json.load(f_config)
 
 # load calib
-with open(config_folder + 'calib.json', 'r') as f_calib:
+with open(config_folder + 'calib.json', 'r') as f_calib :
     calib = json.load(f_calib)
 
 # init weight windows
@@ -78,12 +85,16 @@ small_window = []
 # fetch zero in calib file
 zero = calib["zero"]
 
+# init levels in calib
+levels = [el["weight"] for el in calib["objects"]]
+
 # set up matplotlib window
 fig = plt.figure(2, figsize=(7, 7))
 cid = fig.canvas.mpl_connect('button_press_event', save_level)
 
 # loop
 loop_incr = 0
+prev_state = 0
 while True:
     #
     loop_incr += 1
@@ -129,6 +140,18 @@ while True:
             else :
                 state = 2
 
+        # if we just reached a level
+        if state == 2 and prev_state == 1 :
+            diff_to_levels = [abs(weight_mean - level) for level in levels]
+            for obj in calib["objects"] :
+                diff = abs(dist_to_zero - obj["weight"])
+                if diff <= config["sensitivity_from_levels"] :
+                    print("{}Current level too close to [{}]".format(base_debug, obj["name"]))
+
+
+        # update state
+        prev_state = state
+
         # debug
         #print("{}value = {}\tmean = {}\tdev = {}".format(base_debug, int(curr_weight), int(weight_mean), int(weight_dev)))
 
@@ -149,6 +172,9 @@ while True:
     plt.axhline(y= zero, color = 'black', linewidth = 1)
     plt.axhline(y= zero - config["sensitivity_from_levels"], linestyle = '--', color = 'black', linewidth = 1)
     plt.axhline(y= zero + config["sensitivity_from_levels"], linestyle = '--', color = 'black', linewidth = 1)
+    # draw horizontal line for saved levels
+    for level in levels :
+        plt.axhline(y = zero + level, linestyle = '-', color = 'grey', linewidth = 0.5)
     # draw horizontal line for current weight mean
     if state != -1:
         plt.axhline(y = weight_mean, color = 'maroon', linewidth = 1)

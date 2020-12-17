@@ -1,7 +1,7 @@
 import serial
 import numpy as np
 import matplotlib.pyplot as plt
-import time
+import datetime
 from sys import platform
 
 # configure serial port
@@ -20,8 +20,8 @@ weight_array_small = []
 
 # record variables
 data_folder = "../DATA/sensor_data/"
-rec_name = "empty"
-rec_length = 400  # number of samples in record
+rec_name = "flaine"
+rec_length = -1  # number of samples in record
 rec_delay = 50    # number of data to ignore
 
 # loop
@@ -55,7 +55,7 @@ while True:
     plot_color = 'r'
 
     # check if we can record
-    if loop_incr >= rec_delay and loop_incr <= (rec_delay + rec_length):
+    if loop_incr >= rec_delay :
         # debug
         rec_time = loop_incr - rec_delay
         print("Recording sample {} / {}".format(rec_time, rec_length))
@@ -65,11 +65,11 @@ while True:
 
         # save data
         with(open(data_folder + 'rawdata_' + rec_name + '.txt', 'a')) as f:
-            f.write(str(curr_weight) + "\n")
+            f.write("[" + datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S") + "]\t" + str(curr_weight) + "\n")
 
     # plot
-    plt.clf()
-    plt.plot(weight_array_big, plot_color)
-    plt.pause(0.05)
+    #plt.clf()
+    #plt.plot(weight_array_big, plot_color)
+    #plt.pause(0.05)
 
 #plt.show()

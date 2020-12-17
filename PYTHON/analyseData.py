@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import scipy.fftpack
 
 # data
-data_file = "../DATA/sensor_data/rawdata_empty.txt"
+data_file = "../DATA/sensor_data/rawdata_flaine.txt"
 
 #
 weight_data = []
@@ -15,7 +15,7 @@ with open(data_file, 'r') as f :
         raw_data = line.strip()
 
         # get weight
-        weight = raw_data
+        weight = raw_data.split("\t")[1]
 
         # append data
         weight = float(weight)
@@ -49,5 +49,9 @@ plt.show()
 ## print mean
 print("mean = {}\tvariation = {}".format(mean, dev))
 
-plt.plot(weight_data_np)
+#
+n_samples = len(weight_data_np)
+
+
+plt.plot(weight_data_np[n_samples // 2000 : 2 * n_samples // 2000])
 plt.show()

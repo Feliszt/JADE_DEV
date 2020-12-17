@@ -44,8 +44,6 @@ elif platform == "win32" :
     serial_port_name = "COM7"
 ser = serial.Serial(serial_port_name, 57600, timeout=1)
 
-
-
 # load config
 with open(config_folder + 'config.json', 'r') as f_config:
     config = json.load(f_config)
