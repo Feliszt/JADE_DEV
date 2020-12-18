@@ -14,7 +14,6 @@ import serial
 from pythonosc import udp_client
 # gui
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Button
 # misc
 import os
 import numpy as np
@@ -166,7 +165,7 @@ while True:
             #print("{}Leaving level [{}]".format(base_debug, weight_mean))
 
             # save current level
-            prev_level = weight_mean
+            prev_level = prev_weight_mean
 
         # detect reaching a level
         if state == 0 and prev_state == 1 :
@@ -177,6 +176,9 @@ while True:
             level_delta = weight_mean - prev_level
             level_delta_sign = np.sign(level_delta)
             level_delta = abs(level_delta)
+
+            # debug
+            print("{}Level : {}".format(base_debug, level_delta))
 
             # get distance to all objects and detect object
             dist_to_objects = [abs(level_delta - object["weight"]) for object in calib["objects"]]
