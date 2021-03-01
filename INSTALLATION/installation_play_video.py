@@ -28,18 +28,18 @@ class VideoPlayer :
         # init folders name for data
         self.config_folder = "../DATA/config/"
         self.log_folder = "../DATA/log/"
-        
+
         # log
         self.write_to_log("{}start.".format(base_debug))
 
         # load calibration
         with open(self.config_folder + 'calib.json', 'r') as f_calib:
             self.calib = json.load(f_calib)
-            
+
         # load config
         with open(self.config_folder + 'config.json', 'r') as f_config:
             self.config = json.load(f_config)
-            
+
         # window
         self.window = _window
         self.window.overrideredirect(True)
@@ -51,7 +51,7 @@ class VideoPlayer :
 
         # canvas
         self.canvas = Canvas(self.window, width=self.app_w, height=self.app_h, bd=0, highlightthickness=0, relief='ridge', bg='black')
-        self.canvas.pack(side = LEFT)    
+        self.canvas.pack(side = LEFT)
 
         # set up object list
         self.objects_on_scale = []
@@ -89,7 +89,7 @@ class VideoPlayer :
             # update current video
             self.curr_video = self.next_video
             #self.delay = int(self.curr_video["video_duration"] * 1000) - 0
-            
+
             # get next video
             # at this point multiple things are possible
             # 1) we are playing base video, in that case curr_video will not be in the list of
@@ -111,7 +111,7 @@ class VideoPlayer :
                     curr_video_index = self.objects_on_scale.index(self.curr_video)
                     next_video_index = curr_video_index + 1
                     self.next_video = self.objects_on_scale[next_video_index]
-                    
+
             # get playing state
             # we read a json file with only true or false in it to know if we play the file
             # The "ko" alias is set to toggle this bool so that we can go out of the playing loop
@@ -130,7 +130,7 @@ class VideoPlayer :
                     print("{}Could not play video [{}]".format(base_debug, video_file))
                     self.write_to_log("{}Could not play video [{}]".format(base_debug, video_file))
             else :
-                time.sleep(1)
+                time.sleep(3)
 
             # debug
             print("{}(update)\t[{}]\t=>\t[{}]".format(base_debug, self.curr_video["name"], self.next_video["name"]))
@@ -146,6 +146,9 @@ class VideoPlayer :
     def add_object(self, unused_addr, args):
         # get object we added
         added_object = next(item for item in self.calib["objects"] if item["name"] == args)
+
+        if added_object in self.objects_on_scale :
+            return
 
         # when an object is added
         # 1) there are no objects on the scale : next_video is added_object
@@ -204,7 +207,7 @@ class VideoPlayer :
             #print("{}(remove_object)\t[{}]\t=>\t[{}]\t{}".format(base_debug, self.curr_video["video_name"], self.next_video["video_name"], objects_on_board_names))
             #print("{}(remove_object)\t{}".format(base_debug, objects_on_board_names))
             #self.write_to_log("{}(remove_object)\t{}".format(base_debug, objects_on_board_names))
-            
+
     # function that allow writing a log file
     def write_to_log(self, el_to_write) :
         date_str = datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
